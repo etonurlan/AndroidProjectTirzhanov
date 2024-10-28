@@ -1,33 +1,29 @@
 package com.example.androidprojecttirzhanov.ui.screens
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.example.androidprojecttirzhanov.data.FootballerData
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.androidprojecttirzhanov.presentation.viewmodel.UserViewModel
 
 @Composable
-fun DetailScreen(footballerName: String?) {
-    val footballer = FootballerData.footballers.find { it.name == footballerName }
+fun DetailScreen(
+    userId: Int,
+    navController: NavController,
+    viewModel: UserViewModel
+) {
+    val user = viewModel.users.collectAsState().value.find { it.id == userId }
 
-    if (footballer != null) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(text = "Name: ${footballer.name}", style = Typography.h5, color = Color.White)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Position: ${footballer.position}", style = Typography.h5, color = Color.White)
-            Text(text = "Goals: ${footballer.goals}", style = Typography.h5, color = Color.White)
-            Text(text = "Team: ${footballer.team}", style = Typography.h5, color = Color.White)
-            Text(text = "Height: ${footballer.height} m", style = Typography.h5, color = Color.White)
-            Text(text = "Weight: ${footballer.weight} kg", style = Typography.h5, color = Color.White)
-        }
-    } else {
-        Text(text = "Footballer not found", color = Color.White)
-    }
+    user?.let {
+        Text(
+            text = "Name: ${it.name}\nUsername: ${it.username}\nEmail: ${it.email}",
+            style = TextStyle(fontSize = 20.sp) // Укажите нужный размер шрифта
+        )
+    } ?: Text(
+        text = "User not found",
+        style = TextStyle(fontSize = 20.sp) // Также увеличиваем шрифт для сообщения об ошибке
+    )
 }
