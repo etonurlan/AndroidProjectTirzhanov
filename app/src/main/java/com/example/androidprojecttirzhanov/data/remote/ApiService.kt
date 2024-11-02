@@ -18,15 +18,6 @@ interface ApiService {
 }
 
 object ApiServiceBuilder {
-//    private const val BASE_URL = "https://jsonplaceholder.typicode.com/"
-//
-//    fun create(): ApiService {
-//        return Retrofit.Builder()
-//            .baseUrl(BASE_URL)
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .build()
-//            .create(ApiService::class.java)
-//    }
     private const val BASE_URL = "https://jsonplaceholder.typicode.com/"
 
     fun create(context: Context): ApiService {
