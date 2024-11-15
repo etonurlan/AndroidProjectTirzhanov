@@ -10,7 +10,9 @@ import com.example.androidprojecttirzhanov.ui.screens.ListScreen
 import com.example.androidprojecttirzhanov.ui.screens.SettingsScreen
 import androidx.compose.ui.Modifier
 import com.example.androidprojecttirzhanov.data.IndicatorState
+import com.example.androidprojecttirzhanov.ui.screens.EditProfileScreen
 import com.example.androidprojecttirzhanov.ui.screens.FavoriteScreen
+import com.example.androidprojecttirzhanov.ui.screens.ProfileScreen
 
 @Composable
 fun NavigationGraph(
@@ -39,6 +41,13 @@ fun NavigationGraph(
         }
         composable("favorite_screen") {
             FavoriteScreen(viewModel = userViewModel)
+        }
+        composable("profile_screen") {
+            ProfileScreen(navController = navController, viewModel = userViewModel)
+        }
+        // Добавляем экран редактирования профиля
+        composable("edit_profile") {
+            EditProfileScreen(navController = navController, viewModel = userViewModel)
         }
     }
 }

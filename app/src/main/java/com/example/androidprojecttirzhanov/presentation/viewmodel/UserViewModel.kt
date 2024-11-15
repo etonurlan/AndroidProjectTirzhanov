@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidprojecttirzhanov.data.FilterPreferences
 import com.example.androidprojecttirzhanov.data.IndicatorState
+import com.example.androidprojecttirzhanov.data.ProfilePreferences
+import com.example.androidprojecttirzhanov.data.UserProfile
 import com.example.androidprojecttirzhanov.data.local.FavoriteUserEntity
 import com.example.androidprojecttirzhanov.domain.model.User
 import com.example.androidprojecttirzhanov.domain.repository.UserRepository
@@ -22,6 +24,9 @@ class UserViewModel(
     private val context: Context,
     private val indicatorState: IndicatorState
 ) : ViewModel() {
+    private val _userProfile = MutableStateFlow(UserProfile())
+    val userProfile: StateFlow<UserProfile> = _userProfile
+
     private val _users = MutableStateFlow<List<User>>(emptyList())
     val users: StateFlow<List<User>> = _users
 
@@ -42,6 +47,22 @@ class UserViewModel(
         loadFavorites()
         fetchUsers()
         checkInitialFilters()
+        loadUserProfile()
+    }
+
+    private fun loadUserProfile() {
+        viewModelScope.launch {
+            ProfilePreferences.getProfile(context).collect { profile ->
+                _userProfile.value = profile
+            }
+        }
+    }
+
+    fun saveUserProfile(profile: UserProfile) {
+        viewModelScope.launch {
+            ProfilePreferences.saveProfile(context, profile)
+            _userProfile.value = profile
+        }
     }
 
     private fun loadFavorites() {
