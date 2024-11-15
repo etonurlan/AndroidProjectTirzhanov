@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    kotlin("kapt")
 }
 
 android {
@@ -58,9 +59,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-//    implementation("androidx.navigation:navigation-compose:2.5.3")
-//    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0")
-//    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0")
     implementation("androidx.compose.ui:ui:1.0.5")
     implementation("androidx.compose.material:material:1.0.5")
     implementation("androidx.navigation:navigation-compose:2.4.0")
@@ -69,8 +67,15 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.room:room-runtime:2.5.0")
+    kapt("androidx.room:room-compiler:2.5.0")
+    implementation("androidx.room:room-ktx:2.5.0")
     debugImplementation("com.github.chuckerteam.chucker:library:3.5.2")
     releaseImplementation("com.github.chuckerteam.chucker:library-no-op:3.5.2")
+    implementation("io.insert-koin:koin-core:3.5.0")
+    implementation("io.insert-koin:koin-android:3.5.0")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

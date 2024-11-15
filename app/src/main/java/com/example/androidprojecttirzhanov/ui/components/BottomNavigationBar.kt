@@ -11,12 +11,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.getValue
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
-    val items = listOf("list_screen", "settings_screen")
-    val icons = listOf(Icons.Filled.Home, Icons.Filled.Settings)
+    val items = listOf("list_screen", "settings_screen", "favorite_screen")
+    val icons = listOf(Icons.Filled.Home, Icons.Filled.Settings, Icons.Default.Star)
     BottomNavigation(
         backgroundColor = Color.Blue,
         contentColor = Color.White
@@ -27,7 +28,16 @@ fun BottomNavigationBar(navController: NavController) {
         items.forEachIndexed { index, screen ->
             BottomNavigationItem(
                 icon = { Icon(icons[index], contentDescription = null) },
-                label = { Text(text = if (screen == "list_screen") "Footballers" else "Settings") },
+                label = {
+                    Text(
+                        text = when (screen) {
+                            "list_screen" -> "Footballers"
+                            "settings_screen" -> "Settings"
+                            "favorite_screen" -> "Favorites"
+                            else -> ""
+                        }
+                    )
+                },
                 selected = currentRoute == screen,
                 onClick = {
                     navController.navigate(screen) {
