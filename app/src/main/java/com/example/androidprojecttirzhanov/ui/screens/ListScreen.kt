@@ -5,31 +5,35 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.androidprojecttirzhanov.data.FootballerData
-import com.example.androidprojecttirzhanov.ui.screens.Typography
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+import com.example.androidprojecttirzhanov.presentation.viewmodel.UserViewModel
 
 @Composable
-fun ListScreen(navController: NavController) {
-    val footballers = FootballerData.footballers
+fun ListScreen(viewModel: UserViewModel, navController: NavController) {
+    val users by viewModel.users.collectAsState()
+    val loading by viewModel.loading.collectAsState()
 
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        items(footballers) { footballer ->
-            Text(
-                text = footballer.name,
-                style = Typography.h5,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .clickable {
-                        navController.navigate("detail_screen/${footballer.name}")
-                    }
-            )
+    if (loading) {
+        CircularProgressIndicator()
+    } else {
+        LazyColumn {
+            items(users) { user ->
+                Text(
+                    text = user.name,
+                    style = TextStyle(fontSize = 20.sp),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable {
+                            navController.navigate("detail_screen/${user.id}")
+                        }
+                )
+            }
         }
     }
 }
