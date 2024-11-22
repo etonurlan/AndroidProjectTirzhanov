@@ -1,14 +1,13 @@
 package com.example.androidprojecttirzhanov.ui.screens
 
 import android.Manifest
-import android.app.Activity
-import android.app.DownloadManager
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.ActivityNotFoundException
+import android.app.PendingIntent
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
@@ -18,7 +17,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,35 +27,37 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
+import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.example.androidprojecttirzhanov.presentation.viewmodel.UserViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberImagePainter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.example.androidprojecttirzhanov.NotificationReceiver
 import com.example.androidprojecttirzhanov.data.UserProfile
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.IOException
+import java.util.Calendar
 
 @Composable
 fun EditProfileScreen(viewModel: UserViewModel, navController: NavController) {
@@ -67,6 +67,8 @@ fun EditProfileScreen(viewModel: UserViewModel, navController: NavController) {
     var jobTitle by remember { mutableStateOf(userProfile.jobTitle) }
     var resumeUrl by remember { mutableStateOf(userProfile.resumeUrl) }
     var avatarUri by remember { mutableStateOf(userProfile.avatarUri) }
+    var favoriteTime by remember { mutableStateOf(userProfile.favoriteTime) }
+    var isTimeValid by remember { mutableStateOf(true) }
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -166,14 +168,102 @@ fun EditProfileScreen(viewModel: UserViewModel, navController: NavController) {
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
+        OutlinedTextField(
+            value = favoriteTime,
+            onValueChange = {
+                favoriteTime = it
+                isTimeValid = validateTime(it)
+                if (isTimeValid) {
+                    setNotificationAtTime(context, it) // Устанавливаем уведомление только если время корректное
+                }
+            },
+            label = { Text("Время любимой пары (HH:mm)") },
+            isError = !isTimeValid,
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Notifications,
+                    contentDescription = "Выбрать время",
+                    tint = Color.Blue,
+                    modifier = Modifier.clickable {
+                        showTimePicker(context) { selectedTime ->
+                            favoriteTime = selectedTime
+                            setNotificationAtTime(
+                                context,
+                                selectedTime
+                            ) // Устанавливаем уведомление
+                        }
+                    }
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color.Blue,
+                unfocusedBorderColor = Color.Gray
+            )
+        )
+
+        if (!isTimeValid) {
+            Text("Введите корректное время в формате HH:mm", color = Color.Red, fontSize = 12.sp)
+        }
 
         Button(onClick = {
-            viewModel.saveUserProfile(UserProfile(fullName, avatarUri, resumeUrl, jobTitle))
+            viewModel.saveUserProfile(UserProfile(fullName, avatarUri, resumeUrl, jobTitle, favoriteTime))
             navController.navigateUp()
         }) {
             Text("Готово")
         }
     }
+}
+
+fun validateTime(time: String): Boolean {
+    return time.matches(Regex("^([01]?\\d|2[0-3]):[0-5]\\d$"))
+}
+
+fun showTimePicker(context: Context, onTimeSelected: (String) -> Unit) {
+    val calendar = Calendar.getInstance()
+    TimePickerDialog(
+        context,
+        { _, hour, minute ->
+            onTimeSelected(String.format("%02d:%02d", hour, minute))
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        true
+    ).show()
+}
+fun setNotificationAtTime(context: Context, time: String) {
+    val calendar = Calendar.getInstance()
+
+    // Парсим строку времени "HH:mm"
+    val timeParts = time.split(":")
+    val hour = timeParts[0].toInt()
+    val minute = timeParts[1].toInt()
+
+    calendar.set(Calendar.HOUR_OF_DAY, hour)
+    calendar.set(Calendar.MINUTE, minute)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+
+    // Если время уже прошло на сегодняшний день, установим на следующий день
+    if (calendar.timeInMillis < System.currentTimeMillis()) {
+        calendar.add(Calendar.DATE, 1)
+    }
+
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+    // Создаем PendingIntent для уведомления
+    val intent = Intent(context, NotificationReceiver::class.java)
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        0,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
+    // Устанавливаем будильник
+    alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
 }
 
 @Composable
@@ -215,45 +305,6 @@ fun saveImageToInternalStorage(context: Context, bitmap: Bitmap): Uri? {
     }
 }
 
-//fun downloadFile(url: String, context: Context) {
-//    // Для Android 9 и ниже проверяем разрешение
-//    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-//        if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(context as Activity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
-//            return
-//        }
-//    }
-//
-//    // Используем DownloadManager для Android 10 и выше
-//    val request = DownloadManager.Request(Uri.parse(url))
-//    request.setTitle("Resume")
-//    request.setDescription("Downloading resume")
-//    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "resume.pdf")
-//
-//    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-//    downloadManager.enqueue(request)
-//
-//    // Здесь можно добавить обработку успешной загрузки
-//}
-//
-//fun openFile(context: Context, fileUri: Uri) {
-//    val intent = Intent(Intent.ACTION_VIEW).apply {
-//        setDataAndType(fileUri, "application/pdf")
-//        addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-//        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-//    }
-//    context.startActivity(intent)
-//}
-//fun openFile(context: Context, fileUri: Uri) {
-//    try {
-//        val intent = Intent(Intent.ACTION_VIEW)
-//        intent.setDataAndType(fileUri, "application/pdf")
-//        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-//        context.startActivity(intent)
-//    } catch (e: ActivityNotFoundException) {
-//        Toast.makeText(context, "No application found to open PDF", Toast.LENGTH_SHORT).show()
-//    }
-//}
 fun downloadMockPdf(context: Context) {
     val fileName = "test.pdf"
     val downloadFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)

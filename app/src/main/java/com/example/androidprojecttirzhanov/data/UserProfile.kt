@@ -7,4 +7,5 @@ data class UserProfile(
     val avatarUri: Uri? = null,
     val resumeUrl: String = "",
     val jobTitle: String = "",
+    val favoriteTime: String = ""
 )

@@ -18,13 +18,15 @@ object ProfilePreferences {
     private val AVATAR_URI_KEY = stringPreferencesKey("avatar_uri")
     private val RESUME_URL_KEY = stringPreferencesKey("resume_url")
     private val JOB_TITLE_KEY = stringPreferencesKey("job_title")
+    private val FAVORITE_TIME = stringPreferencesKey("favorite_time")
 
     fun getProfile(context: Context): Flow<UserProfile> = context.profileDataStore.data.map { preferences ->
         UserProfile(
             fullName = preferences[FULL_NAME_KEY] ?: "",
             avatarUri = preferences[AVATAR_URI_KEY]?.let { Uri.parse(it) },
             resumeUrl = preferences[RESUME_URL_KEY] ?: "",
-            jobTitle = preferences[JOB_TITLE_KEY] ?: ""
+            jobTitle = preferences[JOB_TITLE_KEY] ?: "",
+            favoriteTime = preferences[FAVORITE_TIME] ?: "",
         )
     }
 
@@ -34,6 +36,7 @@ object ProfilePreferences {
             preferences[AVATAR_URI_KEY] = profile.avatarUri.toString()
             preferences[RESUME_URL_KEY] = profile.resumeUrl
             preferences[JOB_TITLE_KEY] = profile.jobTitle
+            preferences[FAVORITE_TIME] = profile.favoriteTime
         }
     }
 }
